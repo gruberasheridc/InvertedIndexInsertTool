@@ -1,0 +1,19 @@
+{
+  "name": "insertTool",
+  "version": "1.0.0",
+  "description": "Inverted Indext Map Reduce result insert tool to DynamoDB.",
+  "main": "insert.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gruberasheridc/InvertedIndexInsertTool.git"
+  },
+  "author": "Asher Gruber",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gruberasheridc/InvertedIndexInsertTool/issues"
+  },
+  "homepage": "https://github.com/gruberasheridc/InvertedIndexInsertTool"
+}
