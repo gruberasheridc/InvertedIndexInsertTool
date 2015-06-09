@@ -71,7 +71,7 @@ function prepareDataForInsert(data) {
         var sitesList = sites.split(",");
         sitesList.forEach(function (site) {
             // Generate an item for every Word, Site, Site Rank.
-            var siteRank = wordSitesMap.get(site)
+            var siteRank = wordSitesMap.get(site);
             if (!siteRank) {
                 // If site is not in map.
                 siteRank = 0;
