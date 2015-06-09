@@ -39,8 +39,8 @@ function insertInvertedIndexToDynamoDB(invertedIndexPath) {
     fs.getFile(invertedIndexPath).then(function(data) {
         if (data) {
             // Prepare data for insert.
-            var rankItems = prepareDataForInsert(data);
-            db.batchWriteItem(rankItems).then(function(data) {
+            var wordUrlRankItems = prepareDataForInsert(data);
+            db.batchWriteItem(wordUrlRankItems).then(function(data) {
                 res.send(data);
             });
         }
@@ -49,49 +49,21 @@ function insertInvertedIndexToDynamoDB(invertedIndexPath) {
     });
 };
 
+/**
+ * The function generates items for insert to the WordUrlRank table. Each item contains Word, Url, Rank.
+ * @param data the inverted index input file data.
+ * @returns {Array} WordUrlRank items to be inserted to the table.
+ */
 function prepareDataForInsert(data) {
-    var lines = data.split('\n');
-
-    // Generate a word/url => Sites/Number map. To be used in order to prepare the insert statement.
-    var wordSitesMap = new Map();
-    lines.forEach(function (line) {
-        if (line) {
-            var wordSites = spliteWordSites(line);
-            var word = wordSites[0];
-            var sites = wordSites[1]; // If the word is a URL sites will contain a number.
-            wordSitesMap.set(word, sites);
-        }
-    });
-
-    // Generate items for insert to the InvertedIndex Table (item contains Word, Sites).
-    var invertedIndexItems = [];
-    wordSitesMap.entries().forEach(function (entry) {
-        var word = entry[0];
-        var sites = entry[1];
-
-        var item = {
-            Item: {
-                Word: {
-                    S: word
-                },
-                sites: {
-                    S: sites
-                }
-            }
-        };
-
-        invertedIndexItems.push(item);
-    });
+    var wordSitesMap = generateWordSitesMap(data);
 
     // Generate items for insert to the WordUrlRank. Each item contains Word, Url, Rank.
-    // We will access the inverted index table only for getting the rank of URLs (it is possible that some ranks
-    // exist in the Inverted Index table that are not in the map (if this is a case of update).
-    var rankItems = [];
+    var wordUrlRankItems = [];
     wordSitesMap.entries().forEach(function (entry) {
         var word = entry[0];
         if (validator.isURL(word)) {
-            // Urls words are only inserted as keys to the InvertedIndex table.
-            // We will perform a lookup to the InvertedIndex table for getting their rank.
+            // Urls words are only used in order to obtain their rank form the wordSitesMap.
+            // We will perform a lookup to the wordSitesMap when preparing the insert statements for "real" words.
             return;
         }
 
@@ -119,16 +91,16 @@ function prepareDataForInsert(data) {
                 }
             };
 
-            rankItems.push(item);
+            wordUrlRankItems.push(item);
         });
 
     });
 
-    return rankItems;
+    return wordUrlRankItems;
 }
 
 /**
- * The method receives an inverted index output line and splits it into two parts (key, value).
+ * The function receives an inverted index output line and splits it into two parts (key, value).
  * The inverted index input line format is as follows:
  *  1. A lien in the form of CSV, where the first column is the key and the rest are the values.
  *  2. If the first column is a word then the following columns are web sites the word resides in.
@@ -144,5 +116,25 @@ function spliteWordSites(line) {
 
     return arr;
 };
+
+/**
+ * The function generates a word/url => Sites/Number map. To be used in order to prepare the DaynamoDB insert statement.
+ * @param data the inverted index input file data.
+ * @returns {Map} a word/url => Sites/Number map.
+ */
+function generateWordSitesMap(data) {
+    var lines = data.split('\n');
+    var wordSitesMap = new Map();
+    lines.forEach(function (line) {
+        if (line) {
+            var wordSites = spliteWordSites(line);
+            var word = wordSites[0];
+            var sites = wordSites[1]; // If the word is a URL sites will contain a number.
+            wordSitesMap.set(word, sites);
+        }
+    });
+
+    return wordSitesMap;
+}
 
 
