@@ -16,10 +16,10 @@
      https://fivethirtyeight.com/datalab/what-kyrie-irvings-injury-could-mean-for-the-cavs-chances/,3
  */
 
-var db = require('AWSService')();
+var db = require('./AWSService')();
 db.setup();
 
-var fs = require('fileSystemLayer')();
+var fs = require('./fileSystemLayer')();
 fs.setup();
 
 var validator = require('validator');
