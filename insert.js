@@ -127,6 +127,16 @@ function prepareDataForInsert(data) {
     return rankItems;
 }
 
+/**
+ * The method receives an inverted index output line and splits it into two parts (key, value).
+ * The inverted index input line format is as follows:
+ *  1. A lien in the form of CSV, where the first column is the key and the rest are the values.
+ *  2. If the first column is a word then the following columns are web sites the word resides in.
+ *  3. If the first column is a URL the second column will contain the number of occurrences that the URL was found.
+ *
+ * @param line from the inverted index input file.
+ * @returns {Array} of size two. The first element is the key and the second is the value.
+ */
 function spliteWordSites(line) {
     var arr = new Array();
     arr[0] = line.substring(0, line.indexOf(","));
