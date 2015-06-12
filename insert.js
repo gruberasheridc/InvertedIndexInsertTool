@@ -22,6 +22,7 @@ db.setup();
 var fs = require('./fileSystemLayer')();
 fs.setup();
 
+var Promise = require('bluebird');
 var validator = require('validator');
 var Map = require("collections/map");
 var argv = require('minimist')(process.argv.slice(2));
@@ -40,7 +41,13 @@ function insertInvertedIndexToDynamoDB(invertedIndexPath) {
         if (data) {
             // Prepare data for insert.
             var wordUrlRankItems = prepareDataForInsert(data);
-            db.batchWriteItem(wordUrlRankItems).then(function(data) {
+            var chunks = chunk(wordUrlRankItems, 25); // Divide the items to chucks of 25 (The API supports a max of 25 items per request).
+            var writesPromise = [];
+            chunks.forEach(function (items) {
+                writesPromise.push(db.batchWriteItem(items));
+            });
+
+            Promise.all(writesPromise).then(function(results) {
                 console.log("The WordUrlRank table was populated.");
             }).catch(function(err) {
                 console.log("Failed to insert items to the WordUrlRank table." + "Error: " + err + ".");
@@ -50,6 +57,21 @@ function insertInvertedIndexToDynamoDB(invertedIndexPath) {
         console.log("Failed to open the inverted index input file." + "Error: " + err + ".");
     });
 };
+
+/**
+ * The method divides the given array into chucks of the given size.
+ * @param arr the array to divide.
+ * @param chunkSize the chuck size to divide by.
+ * @returns {Array} array of chucks each of the given size.
+ */
+function chunk(arr, chunkSize) {
+    var chunks = [];
+    for (var i=0,len=arr.length; i<len; i+=chunkSize) {
+        chunks.push(arr.slice(i, i + chunkSize));
+    }
+
+    return chunks;
+}
 
 /**
  * The function generates items for insert to the WordUrlRank table. Each item contains Word, Url, Rank.
