@@ -41,7 +41,9 @@ function insertInvertedIndexToDynamoDB(invertedIndexPath) {
             // Prepare data for insert.
             var wordUrlRankItems = prepareDataForInsert(data);
             db.batchWriteItem(wordUrlRankItems).then(function(data) {
-                res.send(data);
+                console.log("The WordUrlRank table was populated.");
+            }).catch(function(err) {
+                console.log("Failed to insert items to the WordUrlRank table." + "Error: " + err + ".");
             });
         }
     }).catch(function(err) {
